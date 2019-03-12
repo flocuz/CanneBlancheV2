@@ -3,7 +3,7 @@ from object-detector import *
 from picamera import picamera
 from time import sleep
 
-
+# Angle camera 62.2 x 48.8 degrees
 camera = PiCamera()
 camera.start_preview()
 #Initialisation de la movidius
