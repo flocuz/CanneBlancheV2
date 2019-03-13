@@ -162,8 +162,16 @@ def infer_image_v2( graph, img ):
         output_dict = deserialize_output.ssd( output, CONFIDANCE_THRESHOLD, img_draw.shape )
     elif ARGS.network == 'TinyYolo':
         output_dict = deserialize_output.tinyyolo( output, CONFIDANCE_THRESHOLD, img_draw.shape )
+        
+    tab = [][]
 
-    return output_dict
+    for i in range( 0, output_dict['num_detections'] ):
+        tab[i][0] = "%3.1f%%\t" % output_dict['detection_scores_' + str(i)]
+        tab[i][1] = labels[ int(output_dict['detection_classes_' + str(i)]) ]
+        tab[i][2] = output_dict['detection_boxes_' + str(i)][0]
+        tab[i][3] = output_dict['detection_boxes_' + str(i)][1]
+        
+    return tab
 
 # ---- Step 5: Unload the graph and close the device -------------------------
 
