@@ -135,6 +135,35 @@ def infer_image( graph, img ):
     if 'DISPLAY' in os.environ:
         skimage.io.imshow( img_draw )
         skimage.io.show()
+        
+#------------------------------------------------------ infer image v2
+
+def infer_image_v2( graph, img ):
+
+    # Read original image, so we can perform visualization ops on it
+    img_draw = skimage.io.imread( ARGS.image )
+
+    # The first inference takes an additional ~20ms due to memory 
+    # initializations, so we make a 'dummy forward pass'.
+    graph.LoadTensor( img, 'user object' )
+    output, userobj = graph.GetResult()
+
+    # Load the image as a half-precision floating point array
+    graph.LoadTensor( img, 'user object' )
+
+    # Get the results from NCS
+    output, userobj = graph.GetResult()
+
+    # Get execution time
+    inference_time = graph.GetGraphOption( mvnc.GraphOption.TIME_TAKEN )
+
+    # Deserialize the output into a python dictionary
+    if ARGS.network == 'SSD':
+        output_dict = deserialize_output.ssd( output, CONFIDANCE_THRESHOLD, img_draw.shape )
+    elif ARGS.network == 'TinyYolo':
+        output_dict = deserialize_output.tinyyolo( output, CONFIDANCE_THRESHOLD, img_draw.shape )
+
+    return output_dict
 
 # ---- Step 5: Unload the graph and close the device -------------------------
 
