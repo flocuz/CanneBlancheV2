@@ -12,20 +12,27 @@ from hokuyo.tools import serial_port
 
 # Initialisation
 engine = pyttsx3.init()
-# Angle camera 62.2 x 48.8 degrees
+# Camera
 camera = PiCamera()
 camera.start_preview()
-#Initialisation de la movidius
+# Movidius
 device = open_ncs_device()
 graph = load_graph( device )
-
+# Laser
 uart_port = '/dev/ttyACM0'
 uart_speed = 19200
 laser_serial = serial.Serial(port=uart_port, baudrate=uart_speed, timeout=0.5)
 port = serial_port.SerialPort(laser_serial)
 laser = hokuyo.Hokuyo(port)
+print(laser.laser_on())
+print(laser.get_version_info())
+#print(laser.get_sensor_specs())
+#print(laser.set_motor_speed(10))
+#print(laser.set_high_sensitive(False))
 
-while(True) :
+ON = True
+
+while(ON) :
     #faire la capture d'ecran
     camera.capture('image_pour_detection.jpg')
 
@@ -33,31 +40,44 @@ while(True) :
     img = pre_process_image( img_draw )
 
     #traiter l'image avec object-detector
-    tab = infer_image_v2( graph, img )
+    # Matrix[i][0] Score, Matrix[i][1] Label, Matrix[i][2] TopLeft, Matrix[i][3] BotRight,
+    objectMatrix = infer_image_v2( graph, img )
 
     #donnees lidar
     
-    print(laser.laser_on())
-    print(laser.get_single_scan())
-    print(laser.get_version_info())
-    print(laser.get_sensor_specs())
-    print(laser.get_sensor_state())
-    print(laser.set_high_sensitive())\
-    print(laser.set_high_sensitive(False))
-    print('---')
-    print(laser.set_motor_speed(10))
-    print('---')
-    print(laser.set_motor_speed())
-    print('---')
-    print(laser.reset())
-    print('---')
-    print(laser.laser_off())
-
+    scanTab = laser.get_single_scan()
+    ( val, angle, indice ) = findMinValue( tab )
+    
+    #objet distance sync
+    
+    
+    
     #sorties
     
     #engine.say("I will speak this text")
-    #engine.runAndWait()
+    
+    engine.runAndWait()
+    print(laser.reset())
 
+# Off
+print(laser.laser_off())
 camera.stop_preview()
 engine.stop()
 close_ncs_device( device, graph )
+
+def findMinValue( tab ):
+    min = 999999999
+    ind = 0
+    angle = -1
+    indFound = -1
+    
+    for val in tab:
+        # separe la chaine dans un tableau
+        angleValue = val.split(': ')
+        if(angleValue[1] < min):
+            angle = angleValue[0]
+            min = angleValue[1]
+            indFound = ind
+        ind++
+        
+    return ( min, angle, indFound )
