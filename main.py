@@ -1,4 +1,4 @@
-from object-detector import *
+from object_detector import *
 
 # Camera
 from picamera import picamera
