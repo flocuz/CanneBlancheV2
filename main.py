@@ -32,6 +32,7 @@ print(laser.get_version_info())
 
 ON = True
 ANGLE_CAMERA = 62.2
+RANGE_MIN = 3000
 
 while(ON) :
     #faire la capture d'ecran
@@ -39,7 +40,9 @@ while(ON) :
 
     img_draw = skimage.io.imread( 'image_pour_detection.jpg' )
     img = pre_process_image( img_draw )
+    
     ( length, heigth, dim ) = img_draw.shape
+    anglePixel = length / ANGLE_CAMERA
 
     #traiter l'image avec object-detector
     # Matrix[i][0] Score, Matrix[i][1] Label, Matrix[i][2] TopLeft, Matrix[i][3] BotRight,
@@ -51,13 +54,20 @@ while(ON) :
     ( val, angle, indice ) = findMinValue( scanTab )
     
     #objet distance sync
+    objectValid = []
     
+    if( indice != -1 ):
+        for object in objectMatrix:
+            ( topX, topY ) = object[3]
+            ( botX, botY ) = object[4]
+            if ( ( topX * anglePixel ) >= angle and ( botX * anglePixel ) <= angle):
+                objectValid.append(object)    
     
-    
-    
-    #sorties
-    
-    #engine.say("I will speak this text")
+    #sorties   
+    for object in objectValid:
+        print(object[1])
+        sleep(1000)
+        #engine.say("I will speak this text")
     
     engine.runAndWait()
     print(laser.reset())
@@ -77,7 +87,7 @@ def findMinValue( tab ):
     for val in tab:
         # separe la chaine dans un tableau
         angleValue = val.split(': ')
-        if( angleValue[1] < min and angleValue[1] != -1 and angleValue[0] < ANGLE_CAMERA/2 and angleValue[0] > -ANGLE_CAMERA/2 ):
+        if( angleValue[1] < min and angleValue[1] > RANGE_MIN and angleValue[1] != -1 and angleValue[0] < ANGLE_CAMERA/2 and angleValue[0] > -ANGLE_CAMERA/2 ):
             angle = angleValue[0]
             min = angleValue[1]
             indFound = ind
