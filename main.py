@@ -46,7 +46,7 @@ while(ON) :
     #donnees lidar
     
     scanTab = laser.get_single_scan()
-    ( val, angle, indice ) = findMinValue( tab )
+    ( val, angle, indice ) = findMinValue( scanTab )
     
     #objet distance sync
     
