@@ -163,7 +163,7 @@ def infer_image_v2( graph, img ):
     elif ARGS.network == 'TinyYolo':
         output_dict = deserialize_output.tinyyolo( output, CONFIDANCE_THRESHOLD, img_draw.shape )
         
-    tab = [][]
+    tab = [[]]
 
     for i in range( 0, output_dict['num_detections'] ):
         tab[i][0] = "%3.1f%%\t" % output_dict['detection_scores_' + str(i)]
