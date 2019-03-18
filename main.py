@@ -91,6 +91,6 @@ def findMinValue( tab ):
             angle = angleValue[0]
             min = angleValue[1]
             indFound = ind
-        ind++
+        ind = ind +1
         
     return ( min, angle, indFound )
