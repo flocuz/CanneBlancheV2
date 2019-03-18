@@ -31,6 +31,7 @@ print(laser.get_version_info())
 #print(laser.set_high_sensitive(False))
 
 ON = True
+ANGLE_CAMERA = 62.2
 
 while(ON) :
     #faire la capture d'ecran
@@ -38,6 +39,7 @@ while(ON) :
 
     img_draw = skimage.io.imread( 'image_pour_detection.jpg' )
     img = pre_process_image( img_draw )
+    ( length, heigth, dim ) = img_draw.shape
 
     #traiter l'image avec object-detector
     # Matrix[i][0] Score, Matrix[i][1] Label, Matrix[i][2] TopLeft, Matrix[i][3] BotRight,
@@ -49,6 +51,7 @@ while(ON) :
     ( val, angle, indice ) = findMinValue( scanTab )
     
     #objet distance sync
+    
     
     
     
@@ -74,7 +77,7 @@ def findMinValue( tab ):
     for val in tab:
         # separe la chaine dans un tableau
         angleValue = val.split(': ')
-        if(angleValue[1] < min):
+        if( angleValue[1] < min and angleValue[1] != -1 and angleValue[0] < ANGLE_CAMERA/2 and angleValue[0] > -ANGLE_CAMERA/2 ):
             angle = angleValue[0]
             min = angleValue[1]
             indFound = ind
