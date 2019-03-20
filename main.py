@@ -35,6 +35,19 @@ def findMinValue( tab ):
 
     return ( minimum, angle, indFound )
 
+def getDirection( angle ) :
+    angleMin = -1 * ANGLE_CAMERA * 0.5
+    angleMax = ANGLE_CAMERA * 0.5
+    res = ''
+    if(angleMin <= angle and angle < angleMin + (ANGLE_CAMERA/3)):
+        res = 'to your left'
+    else:
+        if (angleMin + (ANGLE_CAMERA / 3) <= angle and angle <= angleMax - (ANGLE_CAMERA / 3) ):
+            res = 'in front of you'
+        else:
+            res = 'to your right'
+    return res
+
 
 
 # Initialisation
@@ -64,8 +77,6 @@ RANGE_MIN = 3000
 OFFSET = 2.5
 
 iteration = 0
-
-call(['espeak \'Hello\' 2>/dev/null'], shell= True)
 
 while(iteration < 1) :
     #faire la capture d'ecran
@@ -102,15 +113,8 @@ while(iteration < 1) :
             ( topY, topX ) = object[2]
             ( botY, botX ) = object[3]
 
-            print("Pixels pour les box")
-            print(topX)
-            print(botX)
-            print("Angle pour les objets detectes")
-            print(topX * anglePixel - (ANGLE_CAMERA / 2))
-        #    print(angle - OFFSET)
-            print(botX * anglePixel - (ANGLE_CAMERA / 2))
-         #   print(angle + OFFSET)
-
+            print("Pixels pour les box : topX = " + topX + " botX = " + botX)
+            print("Angle pour les objets detectes : ["+  topX * anglePixel - (ANGLE_CAMERA / 2) + " , " + botX * anglePixel - (ANGLE_CAMERA / 2) + "]")
             print("Test condition : ")
             print(( topX * anglePixel - (ANGLE_CAMERA / 2))  - OFFSET)
             print(angle)
@@ -128,11 +132,15 @@ while(iteration < 1) :
                 objectValid.append(object)    
     
     print("Objets valides")
-    #sorties   
+    #sortie sonore (prononce "Attention 'objet' 'distance' meters"
+    objects_str = ''
     for object in objectValid:
         print(object[1])
-        engine.say(object[1])
-    
+        objects_str = objects_str + object[1].split(': ')[1] + ' '
+
+    sentence = 'Look out ' + objects_str + str(val / 1000) + ' meters ' + getDirection(angle)
+    call(['espeak \'' + sentence + '\' 2>/dev/null'], shell=True)
+    #call(['espeak \'Hello\' 2>/dev/null'], shell= True)
     #print(laser.reset())
     iteration = iteration + 1
 
