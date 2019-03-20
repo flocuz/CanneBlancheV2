@@ -1,11 +1,11 @@
+
+  
 from object_detector import *
 
 # Camera
 from picamera import PiCamera
 from time import sleep
 from subprocess import call
-# Text to speech
-import pyttsx3
 # Hokuyo lidar
 import serial
 from hokuyo.driver import hokuyo
@@ -35,45 +35,47 @@ def findMinValue( tab ):
 
     return ( minimum, angle, indFound )
 
+def getDirection( angle ) :
+    angleMin = -1 * ANGLE_CAMERA * 0.5
+    angleMax = ANGLE_CAMERA * 0.5
+    res = ''
+    if(angleMin <= angle and angle < angleMin + (ANGLE_CAMERA/3)):
+        res = 'to your left'
+    else:
+        if (angleMin + (ANGLE_CAMERA / 3) <= angle and angle <= angleMax - (ANGLE_CAMERA / 3) ):
+            res = 'in front of you'
+        else:
+            res = 'to your right'
+    return res
 
-
-# Initialisation
-engine = pyttsx3.init()
 
 # Camera
 camera = PiCamera()
 camera.start_preview()
+
 # Movidius
 device = open_ncs_device()
 graph = load_graph( device )
+
 # Laser
 uart_port = '/dev/ttyACM0'
 uart_speed = 19200
 laser_serial = serial.Serial(port=uart_port, baudrate=uart_speed, timeout=0.5)
 port = serial_port.SerialPort(laser_serial)
 laser = hokuyo.Hokuyo(port)
-print(laser.laser_on())
-print(laser.get_version_info())
-#print(laser.get_sensor_specs())
-#print(laser.set_motor_speed(10))
-#print(laser.set_high_sensitive(False))
+laser.laser_on()
+laser.get_version_info()
 
 ON = True
 ANGLE_CAMERA = 62.2
-RANGE_MIN = 3000
+RANGE_MIN = 4000
 OFFSET = 2.5
 
-iteration = 0
-
-call(['espeak \'Hello\' 2>/dev/null'], shell= True)
-
-while(iteration < 1) :
+while(ON) :
     #faire la capture d'ecran
     camera.capture('image_pour_detection.jpg')
 
     img_draw = skimage.io.imread( 'image_pour_detection.jpg' )
-    
-
 
     #traiter l'image avec object-detector
     # Matrix[i][0] Score, Matrix[i][1] Label, Matrix[i][2] TopLeft, Matrix[i][3] BotRight,
@@ -102,45 +104,33 @@ while(iteration < 1) :
             ( topY, topX ) = object[2]
             ( botY, botX ) = object[3]
 
-            print("Pixels pour les box")
-            print(topX)
-            print(botX)
-            print("Angle pour les objets detectes")
-            print(topX * anglePixel - (ANGLE_CAMERA / 2))
-        #    print(angle - OFFSET)
-            print(botX * anglePixel - (ANGLE_CAMERA / 2))
-         #   print(angle + OFFSET)
-
-            print("Test condition : ")
-            print(( topX * anglePixel - (ANGLE_CAMERA / 2))  - OFFSET)
-            print(angle)
-            print(( botX * anglePixel - (ANGLE_CAMERA / 2) )  + OFFSET)
-            print(angle)
-
-
-            
-
-
+            print("Pixels pour les box : topX = {}".format(topX) + " botX = {}".format(botX) )
+            print("Angle pour les objets detectes : ["+  str(topX * anglePixel - (ANGLE_CAMERA / 2)) + " , " + str(botX * anglePixel - (ANGLE_CAMERA / 2)) + "]")
 
 
             if ( ( topX * anglePixel - (ANGLE_CAMERA / 2)) - OFFSET <= angle and ( botX * anglePixel - (ANGLE_CAMERA / 2) ) + OFFSET >= angle):
-                print("a la con") 
                 objectValid.append(object)    
-    
-    print("Objets valides")
-    #sorties   
-    for object in objectValid:
-        print(object[1])
-        engine.say(object[1])
-    
-    #print(laser.reset())
-    iteration = iteration + 1
 
-    sleep(3)
+    if len(objectValid) > 0:
+
+        objects_str = ''
+        for object in objectValid:
+            objects_str = objects_str + ', ' + object[1].split(': ')[1] + ' '
+        print("Objets valides : " + objects_str)
+
+        dist = int(val / 1000)
+        if dist == 0:
+            dist_str = 'just '
+        else:
+            dist_str = 'at ' + str(dist) + ' meters '
+
+        sentence = 'Look out ' + objects_str + dist_str + getDirection(angle)
+        call(['espeak \'' + sentence + '\' -ven+f3 -a150 -s140 2>/dev/null'], shell=True)
+        print(sentence)
+        sleep(3)
 
 # Off
-print(laser.laser_off())
+laser.laser_off()
 camera.stop_preview()
 close_ncs_device( device, graph )
-
 

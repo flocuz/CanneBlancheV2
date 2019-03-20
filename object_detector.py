@@ -12,6 +12,7 @@ import os
 import sys
 import numpy as np
 import ntpath
+import time
 import skimage.io
 import skimage.transform
 
@@ -201,10 +202,12 @@ def infer_image_v2( graph, img_draw, img):
 
     print( "==============================================================\n" )
 
-    # If a display is available, show the image on which inference was performed
-    if 'DISPLAY' in os.environ:
-        skimage.io.imshow( img_draw )
-        skimage.io.show()
+    if not os.path.exists('pictures'):
+        os.makedirs('pictures')
+
+    skimage.io.imshow( img_draw )
+    filename = 'pictures/{}.jpg'.format(str(round(time.time() * 1000)))
+    skimage.io.imsave(filename, img_draw)
         
     return tab
 
