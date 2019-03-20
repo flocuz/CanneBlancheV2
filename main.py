@@ -48,7 +48,6 @@ def getDirection( angle ) :
             res = 'to your right'
     return res
 
-
 # Camera
 camera = PiCamera()
 camera.start_preview()
@@ -71,7 +70,9 @@ ANGLE_CAMERA = 62.2
 RANGE_MIN = 4000
 OFFSET = 2.5
 
+
 while(ON) :
+
     #faire la capture d'ecran
     camera.capture('image_pour_detection.jpg')
 
@@ -128,6 +129,7 @@ while(ON) :
         call(['espeak \'' + sentence + '\' -ven+f3 -a150 -s140 2>/dev/null'], shell=True)
         print(sentence)
         sleep(3)
+
 
 # Off
 laser.laser_off()
